@@ -1,11 +1,18 @@
 #!/usr/bin/env python
 import os
 import sys
+import win_subprocess
 import subprocess
+
 import sqlite3
 import base64
 import gzip
 import re
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
+import codecs
 from xml.etree import cElementTree as ElementTree
 
 prefix = "wiki/"
@@ -21,10 +28,13 @@ default_layout = "wiki" # Can also use None; note get tagpage for category listi
 git = "git" # assume on path
 pandoc = "pandoc" # assume on path
 
+print("Using the following python version:")
+print(sys.version)
+
 
 def check_pandoc():
     try:
-        child = subprocess.Popen([pandoc, "--version"],
+        child = win_subprocess.Popen([pandoc, "--version"],
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE,
                                  universal_newlines=True)
@@ -84,6 +94,7 @@ with open(user_blacklist, "r") as handle:
 if mediawiki_xml_dump.endswith(".gz"):
     xml_handle = gzip.open(mediawiki_xml_dump)
 else:
+    # xml_handle = codecs.open(mediawiki_xml_dump, 'r', encoding="utf-8") # read as unicode string
     xml_handle = open(mediawiki_xml_dump)
 e = ElementTree.iterparse(xml_handle, events=('start', 'end'))
 
@@ -152,7 +163,7 @@ def cleanup_mediawiki(text):
     languages = ["python", "perl", "sql", "bash", "ruby", "java", "xml"]
     for line in text.split("\n"):
         # line is already unicode
-        line = line.replace("\xe2\x80\x8e", "")  # LEFT-TO-RIGHT
+        # line = line.replace("\xe2\x80\x8e", "")  # LEFT-TO-RIGHT
         # TODO - Would benefit from state tracking (for tag mismatches)
         for lang in languages:
             # Easy case <python> etc
@@ -289,9 +300,9 @@ def dump_revision(mw_filename, md_filename, text, title):
             return True
 
     with open(mw_filename, "w") as handle:
-        handle.write(text)
+        handle.write(text.encode("utf-8")) # TODO FIX - here the UNICODE text is endcoided to bytes
     folder, local_filename = os.path.split(md_filename)
-    child = subprocess.Popen([pandoc,
+    child = win_subprocess.Popen([pandoc,
                               "-f", "mediawiki",
                               "-t", "markdown_github-hard_line_breaks",
                               mw_filename],
@@ -301,7 +312,7 @@ def dump_revision(mw_filename, md_filename, text, title):
     stdout, stderr = child.communicate()
     # Now over-write with the original mediawiki to record that in git,
     with open(mw_filename, "w") as handle:
-        handle.write(original)
+        handle.write(original.encode("utf-8"))
 
     # What did pandoc think?
     if stderr or child.returncode:
@@ -356,7 +367,7 @@ def commit_files(filenames, username, date, comment):
     assert filenames, "Nothing to commit: %r" % filenames
     for f in filenames:
         assert os.path.isfile(f), f
-    cmd = '"%s" add "%s"' % (git, '" "'.join(filenames))
+    cmd = '%s add "%s"' % (git, '" "'.join(filenames))
     run(cmd)
     # TODO - how to detect and skip empty commit?
     if username in user_mapping:
@@ -382,12 +393,12 @@ def commit_files(filenames, username, date, comment):
                               '--author', author,
                               '-F', '-',
                               '--allow-empty']
-    child = subprocess.Popen(cmd,
+    child = win_subprocess.Popen(cmd,
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE,
                              universal_newlines=True)
-    child.stdin.write(comment)
+    child.stdin.write(comment.encode("utf-8"))
     stdout, stderr = child.communicate()
     if child.returncode or stderr:
         sys.stderr.write(stdout)
