@@ -268,7 +268,7 @@ def make_filename(title, ext):
     with automatic links when there are child-folders. Again we
     get the desired URL via the YAML header permalink entry.
     """
-    return os.path.join(prefix, title.replace(" ", "_").replace(":", "_").replace("/", "_") + os.path.extsep + ext)
+    return os.path.join(prefix, title.replace(" ", "_").replace(":", "_").replace("/", "_").replace("?", "_") + os.path.extsep + ext)
 
 def ignore_by_prefix(title):
     for prefix in page_prefixes_to_ignore:
