@@ -389,7 +389,8 @@ def commit_files(filenames, username, date, comment):
     # using the -F option and piping to stdin.
     # cmd = '"%s" commit "%s" --date "%s" --author "%s" -m "%s" --allow-empty' \
     #       % (git, filename, date, author, comment)
-    cmd = [git, 'commit'] + filenames + [
+    cmd = [git, 'commit'] + [ # do not explicitly specify filenames
+    # cmd = [git, 'commit'] + filenames + [
                               '--date', date,
                               '--author', author,
                               '-F', '-',
