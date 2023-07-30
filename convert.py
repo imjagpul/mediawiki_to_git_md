@@ -3,6 +3,7 @@ import os
 import sys
 import win_subprocess
 import subprocess
+from datetime import datetime
 
 import sqlite3
 import base64
@@ -30,6 +31,7 @@ pandoc = "pandoc" # assume on path
 
 print("Using the following python version:")
 print(sys.version)
+print('Start Time:', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
 
 def check_pandoc():
@@ -409,6 +411,12 @@ def commit_files(filenames, username, date, comment):
     if child.returncode:
         sys.stderr.write("Return code %i from git commit\n" % child.returncode)
         sys.stderr.write("Popen(%r, ...)\n" % cmd)
+        
+        # Get the current time
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        # Print the current time
+        sys.stderr.write('Current Time:' + current_time)
         sys.exit(child.returncode)
 
 
